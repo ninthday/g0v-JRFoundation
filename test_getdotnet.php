@@ -53,7 +53,7 @@ $postfields["x"] = "46";
 $postfields["y"] = "17";
 curl_setopt($ch2, CURLOPT_POST, 1);
 curl_setopt($ch2, CURLOPT_POSTFIELDS, $postfields);
-$html_list = curl_exec($ch2);
+//$html_list = curl_exec($ch2);
 curl_close($ch2);
 //echo $html_list;
 preg_match_all('/<iframe[^>]+>/i', $html_list, $iframes);
@@ -91,34 +91,56 @@ curl_setopt($ch3, CURLOPT_REFERER, $list_url);
 curl_setopt($ch3, CURLOPT_VERBOSE, 1);
 curl_setopt($ch3, CURLOPT_STDERR, $f);
 
-$list_content = curl_exec($ch3);
+//$list_content = curl_exec($ch3);
 curl_close($ch3);
 //echo $list_content;
-
-//$list_content = file_get_contents("listcontent5.txt");
+$list_content = file_get_contents("listcontent5.txt");
 //echo $list_content;
+//引入 Class
+require_once './classes/LawBank.Class.php';
 
-$dom = new DOMDocument;
-$dom->loadHTML($list_content);
-$table_doms = $dom->getElementsByTagName('table');
-$judge_content = array();
-foreach ($table_doms as $table_dom) {
-    if ($table_dom->getAttribute("class") == "page") {
-        continue;
-    }
-    foreach ($table_dom->getElementsByTagName("tr") as $tr_dom) {
-        $td_doms = $tr_dom->getElementsByTagName("td");
-        foreach ($tr_dom->getElementsByTagName("a") as $a_dom) {
-            $judge_content["url"] = $a_dom->getAttribute("href");
-            $judge_content["cookie"] = str_replace("')", "", str_replace("cookieId('", "", $a_dom->getAttribute("onclick")));
-        }
-        $judge_content["judge_code"] = $td_doms->item(1)->nodeValue;
-        $judge_content["judgement"] = $td_doms->item(2)->nodeValue;
-        $judge_content["judge_date"] = $td_doms->item(3)->nodeValue;
-        $judge_content["main_point"] = $td_doms->item(4)->nodeValue;
-        print_r($judge_content);
-    }
+//引入 Database 連線參數設定檔
+require_once './inc/myPDOConnConfig.inc.php';
+
+$dsn = $pdoConfig['DB_DRIVER'] . ':host=' . $pdoConfig['DB_HOST'] .
+        ';dbname=' . $pdoConfig['DB_NAME'] .
+        ';port=' . $pdoConfig['DB_PORT'] .
+        ';connect_timeout=30';
+
+try {
+    $dbh = new PDO($dsn, $pdoConfig['DB_USER'], $pdoConfig['DB_PASSWD'], $pdoConfig['DB_OPTIONS']);
+    $obj_lb = new LawBank($dbh);
+    $obj_lb->initContentTable();
+    $obj_lb->parseListcontent($list_content);
+} catch (PDOException $pexc) {
+    echo $pexc->getTraceAsString();
+} catch (Exception $exc) {
+    echo $exc->getMessage();
 }
+
+
+
+//$dom = new DOMDocument;
+//$dom->loadHTML($list_content);
+//$table_doms = $dom->getElementsByTagName('table');
+//$judge_content = array();
+//foreach ($table_doms as $table_dom) {
+//    if ($table_dom->getAttribute("class") == "page") {
+//        continue;
+//    }
+//    foreach ($table_dom->getElementsByTagName("tr") as $tr_dom) {
+//        $td_doms = $tr_dom->getElementsByTagName("td");
+//        foreach ($tr_dom->getElementsByTagName("a") as $a_dom) {
+//            $judge_content["url"] = $a_dom->getAttribute("href");
+//            $judge_content["cookie"] = str_replace("')", "", str_replace("cookieId('", "", $a_dom->getAttribute("onclick")));
+//        }
+//        $judge_content["judge_code"] = $td_doms->item(1)->nodeValue;
+//        $judge_content["judgement"] = $td_doms->item(2)->nodeValue;
+//        $judge_content["judge_date"] = $td_doms->item(3)->nodeValue;
+//        $judge_content["main_point"] = $td_doms->item(4)->nodeValue;
+//        print_r($judge_content);
+//    }
+//}
 //preg_match('~<iframe onload="dyniframesize(\'contentFrame\')" src="(.*?)" width="100%" height="880" scrolling="no" frameborder="0" id="contentFrame" name="contentFrame">~', $html_list, $iframe);
 //var_dump($iframe);
 //preg_match('~<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="(.*?)" />~', $html, $viewstate);
