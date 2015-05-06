@@ -26,16 +26,31 @@ class LawBank
     public function parseListcontent($string_html)
     {
         $onepage_list = array();
+        $page_info = array();
+        $judge_content = array();
         $dom = new DOMDocument;
         $dom->loadHTML('<?xml encoding="UTF-8">' . $string_html);
+        $page_info["viewstate"] = $dom->getElementById("__VIEWSTATE")->getAttribute("value");
+        $page_info["viewstategenerator"] = $dom->getElementById("__VIEWSTATEGENERATOR")->getAttribute("value");
+        $page_info["eventvalidation"] = $dom->getElementById("__EVENTVALIDATION")->getAttribute("value");
+        
         $table_doms = $dom->getElementsByTagName('table');
-        $judge_content = array();
         foreach ($table_doms as $table_dom) {
             if ($table_dom->getAttribute("class") == "page") {
+                foreach($table_dom->getElementsByTagName("td") as $page_td){
+                    if($page_td->getAttribute("width") == "42%"){
+                        $cut_page_info = explode(" ", $page_td->nodeValue);
+                        $page_info["now_page"] = (int)$cut_page_info[4];
+                        $page_info["total_page"] = (int)$cut_page_info[6];
+                    }
+                }
                 continue;
             }
             foreach ($table_dom->getElementsByTagName("tr") as $tr_dom) {
                 $td_doms = $tr_dom->getElementsByTagName("td");
+                if(!$td_doms->item(0)){
+                    continue;
+                }
                 foreach ($tr_dom->getElementsByTagName("a") as $a_dom) {
                     $judge_content["url"] = $a_dom->getAttribute("href");
                     $judge_content["cookie"] = str_replace("')", "", str_replace("cookieId('", "", $a_dom->getAttribute("onclick")));
@@ -51,7 +66,7 @@ class LawBank
         // Release memory
         $dom = NULL;
         $this->saveOneList($onepage_list);
-//        return $onepage_list;
+        return $page_info;
     }
 
     public function initContentTable()
@@ -76,6 +91,7 @@ class LawBank
 
     private function saveOneList(array $lists = array())
     {
+        $exe_flag = true;
         $sql_insert = 'INSERT INTO `listContent`(`judgement_no`, `url`, `cookie_id`, `judgement`, `judge_date`, `main_point`) ' .
                 'VALUES (:judgement_no, :url, :cookie_id, :judgement, :judge_date, :main_point)';
         try {
@@ -87,14 +103,15 @@ class LawBank
                 $sth->bindParam(':judgement', $list['judgement'], PDO::PARAM_STR);
                 $sth->bindParam(':judge_date', $list['judge_date'], PDO::PARAM_STR);
                 $sth->bindParam(':main_point', $list['url'], PDO::PARAM_STR);
-                $sth->execute();
+                $exe_flag = $exe_flag && $sth->execute();
                 echo $list['url'] . PHP_EOL;
-                var_dump($list);
+//                var_dump($list);
             }
         } catch (PDOException $exc) {
 //            echo $exc->getTraceAsString();
             echo $exc->getMessage() . PHP_EOL;
         }
+        return $exe_flag;
     }
 
     public function saveContent()

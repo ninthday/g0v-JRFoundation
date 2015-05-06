@@ -19,7 +19,7 @@ curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_USERAGENT, $useragent);
 
-$html = curl_exec($ch);
+//$html = curl_exec($ch);
 curl_close($ch);
 //echo $html;
 sleep(rand(1, 4));
@@ -111,7 +111,8 @@ try {
     $dbh = new PDO($dsn, $pdoConfig['DB_USER'], $pdoConfig['DB_PASSWD'], $pdoConfig['DB_OPTIONS']);
     $obj_lb = new LawBank($dbh);
     $obj_lb->initContentTable();
-    $obj_lb->parseListcontent($list_content);
+    $page_info = $obj_lb->parseListcontent($list_content);
+    var_dump($page_info);
 } catch (PDOException $pexc) {
     echo $pexc->getTraceAsString();
 } catch (Exception $exc) {
