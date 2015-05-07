@@ -104,7 +104,7 @@ class LawBank
                 $sth->bindParam(':judge_date', $list['judge_date'], PDO::PARAM_STR);
                 $sth->bindParam(':main_point', $list['url'], PDO::PARAM_STR);
                 $exe_flag = $exe_flag && $sth->execute();
-                echo $list['url'] . PHP_EOL;
+//                echo $list['url'] . PHP_EOL;
 //                var_dump($list);
             }
         } catch (PDOException $exc) {

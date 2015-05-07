@@ -19,7 +19,7 @@ curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_USERAGENT, $useragent);
 
-//$html = curl_exec($ch);
+$html = curl_exec($ch);
 curl_close($ch);
 //echo $html;
 sleep(rand(1, 4));
@@ -53,7 +53,7 @@ $postfields["x"] = "46";
 $postfields["y"] = "17";
 curl_setopt($ch2, CURLOPT_POST, 1);
 curl_setopt($ch2, CURLOPT_POSTFIELDS, $postfields);
-//$html_list = curl_exec($ch2);
+$html_list = curl_exec($ch2);
 curl_close($ch2);
 //echo $html_list;
 preg_match_all('/<iframe[^>]+>/i', $html_list, $iframes);
@@ -91,10 +91,10 @@ curl_setopt($ch3, CURLOPT_REFERER, $list_url);
 curl_setopt($ch3, CURLOPT_VERBOSE, 1);
 curl_setopt($ch3, CURLOPT_STDERR, $f);
 
-//$list_content = curl_exec($ch3);
+$list_content = curl_exec($ch3);
 curl_close($ch3);
 //echo $list_content;
-$list_content = file_get_contents("listcontent5.txt");
+//$list_content = file_get_contents("listcontent5.txt");
 //echo $list_content;
 //引入 Class
 require_once './classes/LawBank.Class.php';
@@ -108,11 +108,49 @@ $dsn = $pdoConfig['DB_DRIVER'] . ':host=' . $pdoConfig['DB_HOST'] .
         ';connect_timeout=30';
 
 try {
+    $listcontent5_url = "http://fyjud.lawbank.com.tw/listcontent5.aspx";
     $dbh = new PDO($dsn, $pdoConfig['DB_USER'], $pdoConfig['DB_PASSWD'], $pdoConfig['DB_OPTIONS']);
     $obj_lb = new LawBank($dbh);
     $obj_lb->initContentTable();
     $page_info = $obj_lb->parseListcontent($list_content);
-    var_dump($page_info);
+    while ($page_info["now_page"] <= $page_info["total_page"]) {
+        echo "now list page: " . $page_info["now_page"] . PHP_EOL;
+        $ch4 = curl_init();
+        curl_setopt($ch4, CURLOPT_USERAGENT, $useragent);
+        curl_setopt($ch4, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch4, Cvar / wwwURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($ch4, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch4, CURLOPT_MAXREDIRS, 10);
+        curl_setopt($ch4, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch4, CURLOPT_CONNECTTIMEOUT, $timeout);
+
+        curl_setopt($ch4, CURLOPT_URL, $listcontent5_url);
+        curl_setopt($ch4, CURLOPT_COOKIEJAR, $cookie);
+        curl_setopt($ch4, CURLOPT_COOKIEFILE, $cookie);
+        curl_setopt($ch4, CURLOPT_HEADER, false);
+        curl_setopt($ch4, CURLOPT_REFERER, $listcontent5_url);
+        curl_setopt($ch4, CURLOPT_VERBOSE, 1);
+        curl_setopt($ch4, CURLOPT_STDERR, $f);
+
+        $postfields = array();
+        $postfields["__EVENTTARGET"] = "lnkbtnOhmy2";
+        $postfields["__EVENTARGUMENT"] = "";
+        $postfields["__VIEWSTATE"] = $page_info["viewstate"];
+        $postfields["__VIEWSTATEGENERATOR"] = $page_info["viewstategenerator"];
+        $postfields["__EVENTVALIDATION"] = $page_info["eventvalidation"];
+        curl_setopt($ch4, CURLOPT_POST, true);
+        curl_setopt($ch4, CURLOPT_POSTFIELDS, $postfields);
+//        var_dump($postfields);
+        
+        unset($postfields);
+        unset($page_info);
+
+        $list_content = curl_exec($ch4);
+        $page_info = $obj_lb->parseListcontent($list_content);
+        curl_close($ch4);
+        sleep(rand(1, 30));
+    }
+//    var_dump($page_info);
 } catch (PDOException $pexc) {
     echo $pexc->getTraceAsString();
 } catch (Exception $exc) {
