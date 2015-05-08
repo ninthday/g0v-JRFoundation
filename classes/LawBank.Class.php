@@ -114,11 +114,28 @@ class LawBank
         return $exe_flag;
     }
 
-    public function saveContent()
+    public function updateContent($list_id, $judge_content)
     {
-        
+        $sql_update = 'UPDATE `listContent` SET `content`=:content WHERE `list_id`=:list_id';
+        try {
+            $sth = $this->dbh->prepare($sql_update);
+        $sth->bindParam(':content', $judge_content, PDO::PARAM_STR);
+        $sth->bindParam(':list_id', $list_id, PDO::PARAM_INT);
+        $rtn = $sth->execute();
+        } catch (PDOException $exc) {
+            echo $exc->getTraceAsString();
+        }
+
+        return $rtn;
     }
 
+    public function getEmptyContentList(){
+        $sql_getone = 'SELECT *FROM `listContent` WHERE `content` = "" 
+            ORDER BY RAND( ) LIMIT 0, 1';
+        $rs = $this->dbh->query($sql_getone, PDO::FETCH_ASSOC);
+        return $rs->fetch();
+    }
+    
     function __destruct()
     {
         $this->dbh = null;
