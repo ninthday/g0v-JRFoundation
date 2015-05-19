@@ -102,7 +102,7 @@ class LawBank
                 $sth->bindParam(':cookie_id', $list['cookie'], PDO::PARAM_STR);
                 $sth->bindParam(':judgement', $list['judgement'], PDO::PARAM_STR);
                 $sth->bindParam(':judge_date', $list['judge_date'], PDO::PARAM_STR);
-                $sth->bindParam(':main_point', $list['url'], PDO::PARAM_STR);
+                $sth->bindParam(':main_point', $list['main_point'], PDO::PARAM_STR);
                 $exe_flag = $exe_flag && $sth->execute();
 //                echo $list['url'] . PHP_EOL;
 //                var_dump($list);
